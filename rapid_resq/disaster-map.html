@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disaster Response & Relief Map - RapidResQ</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+        }
+
+        header {
+            background-color: #b30000;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 16px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 6px 14px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: white;
+            color: #b30000;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        /* The map container element */
+        #map {
+            height: calc(100vh - 60px); /* Full height minus header */
+            width: 100%;
+        }
+
+        /* Pulse animation for user location */
+        @keyframes mapPulse {
+            0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="back-btn">← Back</a>
+        <h1>Disaster Response &amp; Relief Map</h1>
+    </header>
+
+    <!-- Map Container -->
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // Initialize the map centred on Aluva area
+        var map = L.map('map').setView([10.0900, 76.3350], 12);
+
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // ── Disaster Zone ──────────────────────────────────────────────
+        L.circle([10.1076, 76.3511], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.4,
+            radius: 700
+        }).addTo(map).bindPopup("<b>⚠️ Flood Alert:</b> Aluva Market Area.<br>Evacuation advised.");
+
+        // ── Refuge Camps (same data as refuges.html) ────────────────────
+        const CAMPS = [
+            { name: "Aluva Govt Hospital Camp",  lat: 10.1150, lng: 76.3450, capacity: 500,  currentPop: 120,  address: "Hospital Road, Aluva" },
+            { name: "St. Xavier's College Hall", lat: 10.1190, lng: 76.3530, capacity: 1000, currentPop: 850,  address: "Aluva - Paravoor Rd" },
+            { name: "Rajagiri SCMS Campus",      lat: 10.0520, lng: 76.3210, capacity: 2000, currentPop: 1980, address: "Kalamassery, Ernakulam" },
+            { name: "UC College Indoor Stadium", lat: 10.1260, lng: 76.3380, capacity: 800,  currentPop: 400,  address: "UC College PO, Aluva" },
+            { name: "Edappally Parish Hall",     lat: 10.0261, lng: 76.3125, capacity: 600,  currentPop: 150,  address: "Edappally Toll, Kochi" }
+        ];
+
+        CAMPS.forEach(camp => {
+            const pct = (camp.currentPop / camp.capacity) * 100;
+            let color, status, emoji;
+            if (pct >= 95)      { color = '#ef4444'; status = 'At Capacity';      emoji = '🔴'; }
+            else if (pct >= 75) { color = '#f59e0b'; status = 'Getting Crowded';  emoji = '🟡'; }
+            else                { color = '#10b981'; status = 'Available Space';   emoji = '🟢'; }
+
+            // Coloured circle marker with tent label
+            const campIcon = L.divIcon({
+                className: '',
+                html: `<div style="text-align:center;">
+                    <div style="background:${color};width:18px;height:18px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);margin:0 auto;"></div>
+                    <div style="font-size:10px;font-weight:700;color:#1f2937;background:white;border-radius:4px;padding:1px 4px;margin-top:2px;box-shadow:0 1px 3px rgba(0,0,0,0.2);white-space:nowrap;">⛺ Refugee Camp</div>
+                </div>`,
+                iconSize: [80, 40],
+                iconAnchor: [40, 10],
+                popupAnchor: [0, -20]
+            });
+
+            const userLat = localStorage.getItem('userLat');
+            const userLng = localStorage.getItem('userLng');
+            let navLink = `https://www.google.com/maps/search/?api=1&query=${camp.lat},${camp.lng}`;
+            if (userLat && userLng) {
+                navLink = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${camp.lat},${camp.lng}`;
+            }
+
+            L.marker([camp.lat, camp.lng], { icon: campIcon })
+                .addTo(map)
+                .bindPopup(`
+                    <b>⛺ Refugee Camp</b><br>
+                    <b>${camp.name}</b><br>
+                    📍 ${camp.address}<br>
+                    👥 ${camp.currentPop} / ${camp.capacity} people (${Math.round(pct)}%)<br>
+                    <span style="color:${color};font-weight:600;">${emoji} ${status}</span><br>
+                    <a href="${navLink}" target="_blank" style="color:#2563eb;font-weight:600;">🧭 Get Directions</a>
+                `);
+        });
+
+        // ── User Live Location ──────────────────────────────────────────
+        const userLat = localStorage.getItem('userLat');
+        const userLng = localStorage.getItem('userLng');
+
+        if (userLat && userLng) {
+            const userLoc = [parseFloat(userLat), parseFloat(userLng)];
+
+            const userIcon = L.divIcon({
+                className: '',
+                html: "<div style='background-color:#2563eb;width:16px;height:16px;border-radius:50%;border:4px solid white;box-shadow:0 0 8px rgba(0,0,0,0.4);animation:mapPulse 2s infinite;'></div>",
+                iconSize: [24, 24],
+                iconAnchor: [12, 12],
+                popupAnchor: [0, -12]
+            });
+
+            L.marker(userLoc, { icon: userIcon, zIndexOffset: 1000 })
+                .addTo(map)
+                .bindPopup("<b>📍 Your Live Location</b><br>Stay Safe!")
+                .openPopup();
+
+            // Pan map to include user location
+            map.setView(userLoc, 13);
+
+            // ── Live Weather Widget (Open-Meteo, no API key) ───────────────
+            const weatherControl = L.control({ position: 'topright' });
+            weatherControl.onAdd = function () {
+                const div = L.DomUtil.create('div');
+                div.id = 'weatherWidget';
+                div.style.cssText = `
+                    background: rgba(255,255,255,0.95);
+                    backdrop-filter: blur(10px);
+                    padding: 14px 16px;
+                    border-radius: 14px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+                    font-family: 'Segoe UI', sans-serif;
+                    font-size: 13px;
+                    min-width: 190px;
+                    border: 1px solid rgba(255,255,255,0.6);
+                `;
+                div.innerHTML = `
+                    <b style="font-size:13px;color:#6b7280;">📡 Fetching weather...</b>
+                `;
+                return div;
+            };
+            weatherControl.addTo(map);
+
+            // WMO weather code → emoji + label
+            function decodeWeather(code) {
+                if (code === 0)               return { emoji: '☀️', label: 'Clear Sky' };
+                if (code <= 2)                return { emoji: '🌤️', label: 'Partly Cloudy' };
+                if (code === 3)               return { emoji: '☁️', label: 'Overcast' };
+                if (code <= 49)               return { emoji: '🌫️', label: 'Foggy' };
+                if (code <= 57)               return { emoji: '🌧️', label: 'Drizzle' };
+                if (code <= 67)               return { emoji: '🌧️', label: 'Rain' };
+                if (code <= 77)               return { emoji: '❄️', label: 'Snow' };
+                if (code <= 82)               return { emoji: '🌦️', label: 'Rain Showers' };
+                if (code <= 86)               return { emoji: '🌨️', label: 'Snow Showers' };
+                if (code <= 99)               return { emoji: '⛈️', label: 'Thunderstorm' };
+                return { emoji: '🌡️', label: 'Unknown' };
+            }
+
+            // Flood/storm risk logic
+            function getRiskAlert(code, windKmh, humidity) {
+                if (code >= 95)       return { label: '⚡ High Storm Risk', color: '#ef4444' };
+                if (code >= 80 || (code >= 60 && humidity > 85))
+                                      return { label: '🌊 Flood Risk: Elevated', color: '#f59e0b' };
+                if (windKmh > 60)    return { label: '💨 High Wind Warning', color: '#f59e0b' };
+                return { label: '✅ Conditions Normal', color: '#10b981' };
+            }
+
+            fetch(`https://api.open-meteo.com/v1/forecast?latitude=${parseFloat(userLat).toFixed(4)}&longitude=${parseFloat(userLng).toFixed(4)}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&wind_speed_unit=kmh&timezone=auto`)
+                .then(r => r.json())
+                .then(data => {
+                    const c = data.current;
+                    const wx = decodeWeather(c.weather_code);
+                    const risk = getRiskAlert(c.weather_code, c.wind_speed_10m, c.relative_humidity_2m);
+
+                    document.getElementById('weatherWidget').innerHTML = `
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                            <b style="font-size:14px;color:#1f2937;">🌤️ Live Weather</b>
+                            <span style="font-size:10px;color:#9ca3af;">Your Location</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                            <span style="font-size:2.4rem;line-height:1;">${wx.emoji}</span>
+                            <div>
+                                <div style="font-size:1.6rem;font-weight:800;color:#1f2937;line-height:1;">${c.temperature_2m}°C</div>
+                                <div style="font-size:12px;color:#6b7280;">${wx.label}</div>
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+                            <div style="background:#f3f4f6;border-radius:8px;padding:6px 8px;">
+                                <div style="font-size:10px;color:#9ca3af;text-transform:uppercase;font-weight:700;">Humidity</div>
+                                <div style="font-size:13px;font-weight:700;color:#1f2937;">💧 ${c.relative_humidity_2m}%</div>
+                            </div>
+                            <div style="background:#f3f4f6;border-radius:8px;padding:6px 8px;">
+                                <div style="font-size:10px;color:#9ca3af;text-transform:uppercase;font-weight:700;">Wind</div>
+                                <div style="font-size:13px;font-weight:700;color:#1f2937;">💨 ${c.wind_speed_10m} km/h</div>
+                            </div>
+                        </div>
+                        <div style="background:${risk.color}18;border:1px solid ${risk.color}44;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:${risk.color};">
+                            ${risk.label}
+                        </div>
+                    `;
+                })
+                .catch(() => {
+                    document.getElementById('weatherWidget').innerHTML = `
+                        <b style="color:#ef4444;">⚠️ Weather unavailable</b><br>
+                        <span style="font-size:11px;color:#6b7280;">Check your internet connection.</span>
+                    `;
+                });
+        }
+
+
+        // ── Map Legend ─────────────────────────────────────────────────
+        const legend = L.control({ position: 'bottomleft' });
+        legend.onAdd = function () {
+            const div = L.DomUtil.create('div');
+            div.style.cssText = 'background:white;padding:12px 16px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.2);font-size:13px;line-height:1.8;min-width:160px;';
+            div.innerHTML = `
+                <b style="display:block;margin-bottom:6px;font-size:14px;">🗺️ Map Legend</b>
+                <b style="font-size:11px;color:#6b7280;display:block;margin-bottom:4px;">⛺ Refugee Camps</b>
+                <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#ef4444;vertical-align:middle;margin-right:6px;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></span>At Capacity<br>
+                <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#f59e0b;vertical-align:middle;margin-right:6px;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></span>Getting Crowded<br>
+                <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#10b981;vertical-align:middle;margin-right:6px;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></span>Available Space<br>
+                <b style="font-size:11px;color:#6b7280;display:block;margin:4px 0;">Other</b>
+                <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#2563eb;vertical-align:middle;margin-right:6px;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></span>Your Location<br>
+                <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#f03;vertical-align:middle;margin-right:6px;opacity:0.7;"></span>Disaster Zone
+            `;
+            return div;
+        };
+        legend.addTo(map);
+    </script>
+
+</body>
+</html>

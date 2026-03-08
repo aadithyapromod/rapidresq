@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disaster Map</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+        }
+
+        header {
+            background-color: #b30000;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1000;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        /* The map container element */
+        #map {
+            height: calc(100vh - 60px); /* Full height minus header */
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Disaster Response & Relief Map</h1>
+    </header>
+
+    <!-- Map Container -->
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([10.1076, 76.3511], 13); 
+
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '©️ OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Example Marker for a Disaster Zone
+        var disasterZone = L.circle([10.1076, 76.3511], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 500
+        }).addTo(map).bindPopup("<b>Flood Alert:</b> Aluva Market Area.");
+
+        // Example Marker for a Relief Camp
+        var camp = L.marker([10.1150, 76.3450]).addTo(map)
+            .bindPopup("🟢 Relief Camp: Aluva Govt Hospital.")
+            
+        // Fetch User Live Location from LocalStorage
+        const userLat = localStorage.getItem('userLat');
+        const userLng = localStorage.getItem('userLng');
+
+        if (userLat && userLng) {
+            const userLoc = [parseFloat(userLat), parseFloat(userLng)];
+            
+            // Distinct user marker
+            var userIcon = L.divIcon({
+                className: 'user-location-marker',
+                html: "<div style='background-color:#2563eb;width:16px;height:16px;border-radius:50%;border:4px solid white;box-shadow:0 0 8px rgba(0,0,0,0.4); animation: mapPulse 2s infinite;'></div>",
+                iconSize: [24, 24],
+                iconAnchor: [12, 12],
+                popupAnchor: [0, -10]
+            });
+            
+            L.marker(userLoc, {icon: userIcon, zIndexOffset: 1000})
+                .addTo(map)
+                .bindPopup("<b>📍 Your Live Location</b><br>Stay Safe!")
+                .openPopup();
+        }
+        </script>
+        
+        <style>
+            @keyframes mapPulse {
+                0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+                70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+            }
+        </style>
+</body>
+</html>

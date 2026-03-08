@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Login - RapidResQ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-header">
+            <span class="login-icon">🛡️</span>
+            <h2>Volunteer Login</h2>
+            <p>Access the RapidResQ Mission Control</p>
+        </div>
+        
+        <div class="input-group">
+            <label for="volunteerCode">Enter Volunteer Code</label>
+            <input type="text" id="volunteerCode" placeholder="e.g. VOL1001" autocomplete="off" onkeypress="if(event.key === 'Enter') loginVolunteer()">
+            <div id="loginError" class="error-msg">Invalid Volunteer Code</div>
+        </div>
+        
+        <button class="btn-primary" onclick="loginVolunteer()" id="loginBtn">Login</button>
+        
+        <div style="margin-top: 20px; font-size: 0.95rem;">
+            <span style="color: var(--text-light);">Don't have a code?</span> 
+            <a href="volunteer-apply.html" style="color: var(--primary-blue); font-weight: 600; text-decoration: none;">Sign up for volunteering</a>
+        </div>
+
+        <div style="margin-top: 5px;">
+            <a href="index.html" class="back-link">← Back to Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Centralized Script -->
+    <script src="script.js"></script>
+    <script>
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', () => {
+            if(sessionStorage.getItem('volunteerCode')) {
+                window.location.href = 'volunteer-dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>

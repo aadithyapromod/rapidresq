@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Help - RapidResQ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-red: #dc2626;
+            --dark-red: #991b1b;
+            --bg-gray: #f3f4f6;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --white: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-gray);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Animated background pattern */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 300px;
+            background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+            clip-path: polygon(0 0, 100% 0, 100% 60%, 0 85%);
+            z-index: -1;
+        }
+
+        .container {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            color: var(--primary-red);
+            font-size: 2rem;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        select, input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: #f9fafb;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary-red);
+            background: var(--white);
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
+        .location-box {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px dashed #cbd5e1;
+            margin-bottom: 25px;
+            text-align: left;
+            transition: border-color 0.3s;
+        }
+        
+        .location-box.success {
+            border-color: #059669;
+            background: #ecfdf5;
+        }
+
+        .location-btn {
+            background: var(--text-dark);
+            color: var(--white);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            margin-top: 15px;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .location-btn:hover {
+            background: #374151;
+        }
+
+        #locationDisplay {
+            margin-top: 10px;
+            font-size: 0.95rem;
+            color: var(--text-light);
+            word-break: break-all;
+            line-height: 1.5;
+        }
+
+        .sos-btn {
+            background: var(--primary-red);
+            color: var(--white);
+            border: none;
+            border-radius: 50%;
+            width: 220px;
+            height: 220px;
+            font-size: 3rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin: 30px auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.4);
+            transition: all 0.2s ease;
+            animation: pulse-border 2s infinite;
+            letter-spacing: 2px;
+        }
+
+        .sos-btn:hover {
+            transform: scale(1.05);
+            background: var(--dark-red);
+        }
+
+        .sos-btn:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes pulse-border {
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 25px rgba(220, 38, 38, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+            }
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--primary-red);
+        }
+
+        /* Confirmation Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--white);
+            padding: 40px 30px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-icon {
+            font-size: 4rem;
+            color: #059669;
+            margin-bottom: 20px;
+        }
+
+        .modal h2 {
+            margin-bottom: 15px;
+            color: var(--text-dark);
+            font-size: 1.8rem;
+        }
+
+        .modal p {
+            color: var(--text-light);
+            margin-bottom: 30px;
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        .close-btn {
+            background: #059669;
+            color: var(--white);
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: background 0.3s;
+            width: 100%;
+        }
+        
+        .close-btn:hover {
+            background: #047857;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1><span style="font-size: 2.5rem;">🚨</span> Emergency Help</h1>
+
+        <div class="location-box" id="locationContainer">
+            <label>📍 Your Location</label>
+            <div id="locationDisplay">Click the button below to fetch your precise GPS coordinates for rescue teams.</div>
+            <button class="location-btn" onclick="getLocation()">
+                <span>🎯</span> Get Current Location
+            </button>
+        </div>
+
+        <div class="form-group">
+            <label for="emergencyType">Emergency Type</label>
+            <select id="emergencyType">
+                <option value="Select" disabled selected>Select emergency type...</option>
+                <option value="Flood">🌊 Flood</option>
+                <option value="Medical">🚑 Medical Emergency</option>
+                <option value="Trapped">🏗️ Trapped / Under Rubble</option>
+                <option value="Fire">🔥 Fire</option>
+                <option value="Cyclone">🌪️ Cyclone / Storm</option>
+                <option value="Other">⚠️ Other</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="peopleCount">Number of People Affected</label>
+            <input type="number" id="peopleCount" min="1" placeholder="Enter number of people (e.g., 1)" />
+        </div>
+
+        <button class="sos-btn" onclick="sendEmergencySOS()">SOS</button>
+
+        <a href="index.html" class="back-link">← Back to Dashboard</a>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmationModal">
+        <div class="modal-content">
+            <div class="modal-icon">✅</div>
+            <h2>SOS Sent Successfully!</h2>
+            <p>Your emergency request and precise location have been transmitted to nearby rescue teams. Help is on the way. <strong>Please stay calm and remain in a safe location.</strong></p>
+            <button class="close-btn" onclick="closeModal()">Back to Dashboard</button>
+        </div>
+    </div>
+
+    <script>
+        let userLocation = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const cachedLat = localStorage.getItem('userLat');
+            const cachedLng = localStorage.getItem('userLng');
+            
+            if (cachedLat && cachedLng) {
+                userLocation = {
+                    lat: parseFloat(cachedLat),
+                    lng: parseFloat(cachedLng)
+                };
+                
+                const display = document.getElementById('locationDisplay');
+                const container = document.getElementById('locationContainer');
+                
+                display.innerHTML = `<strong>Latitude:</strong> ${userLocation.lat.toFixed(6)}<br><strong>Longitude:</strong> ${userLocation.lng.toFixed(6)}<br><span style="color: #059669; font-weight: bold; margin-top: 8px; display:inline-block;">✓ Location secured from Dashboard</span>`;
+                container.classList.add('success');
+                
+                // Hide the fetch button since we already have the location from the previous page
+                document.querySelector('.location-btn').style.display = 'none';
+            }
+        });
+
+        function getLocation() {
+            const display = document.getElementById('locationDisplay');
+            const container = document.getElementById('locationContainer');
+            
+            display.textContent = 'Fetching your precise location...';
+            display.style.color = 'var(--text-light)';
+            container.classList.remove('success');
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        display.innerHTML = `<strong>Latitude:</strong> ${userLocation.lat.toFixed(6)}<br><strong>Longitude:</strong> ${userLocation.lng.toFixed(6)}<br><span style="color: #059669; font-weight: bold; margin-top: 8px; display:inline-block;">✓ Location secured</span>`;
+                        container.classList.add('success');
+                    },
+                    (error) => {
+                        display.textContent = 'Error getting location. Please ensure location services are enabled in your browser settings.';
+                        display.style.color = 'var(--primary-red)';
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                display.textContent = 'Geolocation is not supported by this browser.';
+                display.style.color = 'var(--primary-red)';
+            }
+        }
+
+        function sendEmergencySOS() {
+            const type = document.getElementById('emergencyType').value;
+            const count = document.getElementById('peopleCount').value;
+
+            if (type === 'Select') {
+                alert('Please select an emergency type so rescue teams know what to prepare for.');
+                return;
+            }
+
+            if (!count || count < 1) {
+                alert('Please enter a valid number of people needing assistance.');
+                return;
+            }
+
+            if (!userLocation) {
+                if (!confirm('You have not secured your GPS location. Rescue teams may have trouble finding you. Send SOS anyway?')) {
+                    return;
+                }
+            }
+
+            const payload = {
+                type: type,
+                peopleAffected: parseInt(count),
+                location: userLocation,
+                timestamp: new Date().toISOString()
+            };
+
+            // Send Data to Backend Server
+            const btn = document.querySelector('.sos-btn');
+            btn.innerHTML = '...';
+            btn.style.background = '#991b1b';
+
+            fetch('http://localhost:3000/sos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if(!response.ok) throw new Error('Server response not ok');
+                return response.json();
+            })
+            .then(data => {
+                console.log('Backend Response:', data);
+                // Show confirmation modal
+                document.getElementById('confirmationModal').style.display = 'flex';
+            })
+            .catch(error => {
+                console.error('Error sending SOS:', error);
+                alert("CRITICAL ERROR: Could not connect to the Rescue Server.\nPlease call local emergency numbers immediately!");
+            })
+            .finally(() => {
+                btn.innerHTML = 'SOS';
+                btn.style.background = 'var(--primary-red)';
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('confirmationModal').style.display = 'none';
+            // Redirect back to dashboard after acknowledging
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

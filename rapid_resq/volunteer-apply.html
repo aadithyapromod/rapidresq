@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply for Volunteering - RapidResQ</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .apply-container {
+            max-width: 500px;
+            margin: 50px auto;
+            background: var(--white);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .icon-placeholder {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        
+        .success-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .code-display {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary-blue);
+            letter-spacing: 2px;
+            font-family: monospace;
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(37, 99, 235, 0.1);
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="login-body">
+    <div class="apply-container">
+        <div class="icon-placeholder">📝</div>
+        <h2 style="color: var(--dark-blue); margin-bottom: 5px;">Volunteer Application</h2>
+        <p style="color: var(--text-light); margin-bottom: 25px; font-size: 0.95rem;">Join the RapidResQ response team.</p>
+        
+        <!-- Application Form -->
+        <div id="applicationForm">
+            <div class="input-group">
+                <label for="applyEmail">Email Address</label>
+                <input type="email" id="applyEmail" placeholder="e.g. hero@rapidresq.org">
+            </div>
+            
+            <div class="input-group">
+                <label for="applyPassword">Password</label>
+                <input type="password" id="applyPassword" placeholder="Minimum 6 characters">
+            </div>
+            
+            <div class="input-group">
+                <label for="applyConfirmPassword">Confirm Password</label>
+                <input type="password" id="applyConfirmPassword" placeholder="Repeat your password" onkeypress="if(event.key === 'Enter') applyVolunteer()">
+                <div id="applyError" class="error-msg"></div>
+            </div>
+            
+            <button class="btn-primary" onclick="applyVolunteer()" id="applyBtn">Apply for Volunteering</button>
+        </div>
+
+        <!-- Success Result -->
+        <div id="applicationResult" class="success-box">
+            <h3 style="color: #166534; margin-bottom: 10px;">Application Successful!</h3>
+            <p style="color: #15803d; font-size: 0.95rem;">Your Volunteer Code is:</p>
+            <div id="generatedCode" class="code-display">VOL001</div>
+            <p style="color: var(--text-dark); font-weight: 500; font-size: 0.9rem; margin-bottom: 20px;">
+                Please save this code to login as a volunteer.
+            </p>
+            <a href="volunteer-login.html" class="btn-primary" style="text-decoration: none; display: inline-block;">Proceed to Login</a>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <a href="index.html" class="back-link">← Return to Dashboard</a>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

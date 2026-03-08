@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Dashboard - RapidResQ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+            <span>🛡️</span> RapidResQ Volunteer Hub
+        </div>
+        <div class="user-profile">
+            <div class="avatar">👨‍⚕️</div>
+            <span id="welcomeMessage">Welcome Volunteer</span>
+            <button onclick="logoutVolunteer()" class="btn-logout">Logout</button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-container">
+
+        <div class="dashboard-header">
+            <div class="header-title">
+                <h1>Emergency Mission Control</h1>
+                <p>Respond to incoming SOS requests directly from citizens.</p>
+            </div>
+            <button class="refresh-btn" onclick="fetchSOSRequests()">
+                <span>🔄</span> Refresh Feed
+            </button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card urgent">
+                <div class="stat-title">Pending Rescues</div>
+                <div class="stat-value" id="statPending">0</div>
+            </div>
+            <div class="stat-card active">
+                <div class="stat-title">Missions in Progress</div>
+                <div class="stat-value" id="statProgress">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Total Requests</div>
+                <div class="stat-value" id="statTotal">0</div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="table-container">
+            <div class="table-header">
+                <h2>Live SOS Requests Feed</h2>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mission ID</th>
+                        <th>Emergency Type</th>
+                        <th>Precise Location (Lat, Lng)</th>
+                        <th>People Affected</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <div class="empty-icon">📡</div>
+                                <h3>Scanning for signals...</h3>
+                                <p style="margin-top: 8px;">Fetching data from the emergency backend.</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span style="font-size: 1.2rem;">✅</span>
+        <span id="toastMsg">Mission Accepted!</span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Setup Session Based logic uniquely for Dashboard
+            const volunteerCode = sessionStorage.getItem('volunteerCode');
+            
+            if (!volunteerCode) {
+                // Kick back to login if no code exists
+                window.location.href = 'volunteer-login.html';
+                return;
+            }
+
+            // Customize welcome text
+            document.getElementById('welcomeMessage').textContent = `Welcome ${volunteerCode}`;
+
+            // Initial API polling fetch call
+            fetchSOSRequests();
+        });
+    </script>
+</body>
+</html>

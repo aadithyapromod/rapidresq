@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nearby Refuges - RapidResQ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #2563eb;
+            --dark-blue: #1e3a8a;
+            --primary-red: #dc2626;
+            --warning-orange: #f97316;
+            --safe-green: #059669;
+            --bg-gray: #f8fafc;
+            --text-dark: #1f2937;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+            padding: 20px;
+        }
+
+        /* Nav Header */
+        .page-header {
+            max-width: 900px;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--white);
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border-left: 5px solid var(--safe-green);
+        }
+
+        .header-titles h1 {
+            font-size: 1.8rem;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-titles p {
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--text-light);
+            font-weight: 600;
+            transition: color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .back-link:hover { color: var(--primary-blue); }
+
+        /* Container */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* User Location Status */
+        .location-status {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .loc-icon {
+            font-size: 2rem;
+            background: #dbeafe;
+            width: 50px; height: 50px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+        }
+
+        .loc-details h3 { font-size: 1.1rem; }
+        .loc-details p { color: var(--text-light); font-size: 0.9rem; margin-top: 4px; }
+
+        /* Camps Filter / Loader */
+        .status-message {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        /* Camps List */
+        .camps-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .camp-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 20px 25px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.2s;
+            border-left: 4px solid transparent;
+        }
+        
+        .camp-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+
+        /* Card States based on distance/capacity */
+        .card-opt { border-left-color: var(--safe-green); }
+        .card-warn { border-left-color: var(--warning-orange); }
+        .card-full { border-left-color: var(--primary-red); opacity: 0.8; }
+
+        .camp-main {
+            flex: 1;
+        }
+
+        .camp-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .camp-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-safe { background: #d1fae5; color: #065f46; }
+        .badge-crowded { background: #ffedd5; color: #9a3412; }
+        .badge-full { background: #fee2e2; color: #991b1b; }
+
+        .camp-address {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Density / Distance Stats */
+        .camp-stats {
+            display: flex;
+            gap: 30px;
+            text-align: right;
+            align-items: center;
+        }
+
+        .stat-block {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .stat-val {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+        
+        .stat-lbl {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .density-bar-container {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .density-bar {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        /* Directions Button */
+        .btn-directions {
+            background: #f1f5f9;
+            color: var(--primary-blue);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            margin-left: 20px;
+        }
+
+        .btn-directions:hover {
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+
+        @media (max-width: 768px) {
+            .camp-card { flex-direction: column; align-items: flex-start; gap: 20px; }
+            .camp-stats { width: 100%; justify-content: space-between; }
+            .btn-directions { margin-left: 0; width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="page-header">
+        <div class="header-titles">
+            <h1><span style="font-size: 2.2rem;">⛺</span> Nearest Safe Refuges</h1>
+            <p>Locating safe zones relative to your exact GPS coordinates.</p>
+        </div>
+        <a href="index.html" class="back-link">
+            <span>←</span> Dashboard
+        </a>
+    </header>
+
+    <div class="container">
+        
+        <!-- User Location Display -->
+        <div class="location-status" id="userLocationStatus">
+            <div class="loc-icon">🛰️</div>
+            <div class="loc-details">
+                <h3>Acquiring Location Data...</h3>
+                <p>Checking browser local storage for your GPS pin.</p>
+            </div>
+        </div>
+
+        <!-- Dynamic Camps Container -->
+        <div id="campsContainer">
+            <div class="status-message">
+                <h2>📡 Calculating distances...</h2>
+                <p style="margin-top: 10px;">Please wait while we determine the safest routes.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Dummy data for available relief camps (we will treat these as static backend records)
+        // Assume these are spread randomly relative to an area in Kerala (e.g., Aluva bounding box)
+        const AVAILABLE_CAMPS = [
+            { id: 1, name: "Aluva Govt Hospital Camp", lat: 10.1150, lng: 76.3450, capacity: 500, currentPop: 120, address: "Hospital Road, Aluva" },
+            { id: 2, name: "St. Xavier's College Hall", lat: 10.1190, lng: 76.3530, capacity: 1000, currentPop: 850, address: "Aluva - Paravoor Rd" },
+            { id: 3, name: "Rajagiri SCMS Campus", lat: 10.0520, lng: 76.3210, capacity: 2000, currentPop: 1980, address: "Kalamassery, Ernakulam" },
+            { id: 4, name: "UC College Indoor Stadium", lat: 10.1260, lng: 76.3380, capacity: 800, currentPop: 400, address: "UC College PO, Aluva" },
+            { id: 5, name: "Edappally Parish Hall", lat: 10.0261, lng: 76.3125, capacity: 600, currentPop: 150, address: "Edappally Toll, Kochi" }
+        ];
+
+        let userCoords = null;
+
+        // Haversine formula to calculate straight-line distance between two lat/lng pairs in kilometers
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Radius of the earth in km
+            const dLat = (lat2 - lat1) * (Math.PI / 180);
+            const dLon = (lon2 - lon1) * (Math.PI / 180);
+            const a = 
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+                Math.sin(dLon / 2) * Math.sin(dLon / 2); 
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
+            const distance = R * c; 
+            return distance;
+        }
+
+        // Initialize page functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const cachedLat = localStorage.getItem('userLat');
+            const cachedLng = localStorage.getItem('userLng');
+            
+            const locStatus = document.getElementById('userLocationStatus');
+            const container = document.getElementById('campsContainer');
+
+            if (cachedLat && cachedLng) {
+                userCoords = { lat: parseFloat(cachedLat), lng: parseFloat(cachedLng) };
+                
+                // Update Location Header
+                locStatus.style.borderLeft = "4px solid var(--safe-green)";
+                locStatus.innerHTML = `
+                    <div class="loc-icon" style="background:#d1fae5;">📍</div>
+                    <div class="loc-details">
+                        <h3>Your Live Location is Secured</h3>
+                        <p>${userCoords.lat.toFixed(5)}, ${userCoords.lng.toFixed(5)}</p>
+                    </div>
+                `;
+
+                // Calculate distances and process data
+                processCampsData();
+
+            } else {
+                // No Location found in local storage
+                locStatus.style.borderLeft = "4px solid var(--primary-red)";
+                locStatus.innerHTML = `
+                    <div class="loc-icon" style="background:#fee2e2;">⚠️</div>
+                    <div class="loc-details">
+                        <h3>Location Unavailable</h3>
+                        <p>We couldn't find your location. Please return to the dashboard to allow GPS access.</p>
+                    </div>
+                `;
+                
+                container.innerHTML = `
+                    <div class="status-message">
+                        <h2>GPS Permission Required</h2>
+                        <p style="margin-top: 10px;">To show you the nearest camps, we need to know where you are.</p>
+                        <a href="index.html" style="display:inline-block; margin-top:20px; color:var(--primary-blue); font-weight:600;">← Return to Dashboard</a>
+                    </div>
+                `;
+            }
+        });
+
+        // Add calculated properties and sort the array
+        function processCampsData() {
+            // Map over array to compute distance and occupancy percentage
+            let processedCamps = AVAILABLE_CAMPS.map(camp => {
+                const dist = calculateDistance(userCoords.lat, userCoords.lng, camp.lat, camp.lng);
+                const densityPct = (camp.currentPop / camp.capacity) * 100;
+                
+                return {
+                    ...camp,
+                    distanceKm: dist,
+                    densityPct: densityPct
+                };
+            });
+
+            // Sort critically: Closest camps first
+            processedCamps.sort((a, b) => a.distanceKm - b.distanceKm);
+
+            renderCamps(processedCamps);
+        }
+
+        // Generate the DOM nodes layout
+        function renderCamps(camps) {
+            const container = document.getElementById('campsContainer');
+            
+            let htmlList = '<div class="camps-list">';
+
+            camps.forEach((camp) => {
+                
+                // Determine Visual States based on Population Density
+                let badgeClass = 'badge-safe';
+                let cardClass = 'card-opt';
+                let densityColor = '#10b981'; // safe green
+                let statusText = 'Available Space';
+
+                if (camp.densityPct >= 95) {
+                    badgeClass = 'badge-full';
+                    cardClass = 'card-full';
+                    densityColor = '#ef4444'; // red
+                    statusText = 'At Capacity';
+                } else if (camp.densityPct >= 75) {
+                    badgeClass = 'badge-crowded';
+                    cardClass = 'card-warn';
+                    densityColor = '#f59e0b'; // orange
+                    statusText = 'Getting Crowded';
+                }
+
+                const mapsLink = `https://www.google.com/maps/dir/?api=1&origin=${userCoords.lat},${userCoords.lng}&destination=${camp.lat},${camp.lng}`;
+
+                htmlList += `
+                <div class="camp-card ${cardClass}">
+                    <div class="camp-main">
+                        <div class="camp-header">
+                            <h2 class="camp-title">${camp.name}</h2>
+                            <span class="badge ${badgeClass}">${statusText}</span>
+                        </div>
+                        <div class="camp-address">
+                            <span>🗺️</span> ${camp.address}
+                        </div>
+                    </div>
+
+                    <div class="camp-stats">
+                        <!-- Density Stat -->
+                        <div class="stat-block" style="flex:1; min-width: 140px;">
+                            <div class="stat-val" style="color:${densityColor}">${Math.round(camp.densityPct)}%</div>
+                            <div class="stat-lbl">Pop. Density</div>
+                            
+                            <div class="density-bar-container">
+                                <div class="density-bar" style="width: ${camp.densityPct}%; background:${densityColor};"></div>
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-light); margin-top:2px;">
+                                ${camp.currentPop} / ${camp.capacity} people
+                            </div>
+                        </div>
+
+                        <!-- Distance Stat -->
+                        <div class="stat-block">
+                            <div class="stat-val">${camp.distanceKm.toFixed(1)} <span style="font-size:1rem; font-weight:600; color:var(--text-light)">km</span></div>
+                            <div class="stat-lbl">Distance</div>
+                        </div>
+
+                        <!-- Action -->
+                        <a href="${mapsLink}" target="_blank" class="btn-directions">
+                            🧭 Navigate
+                        </a>
+                    </div>
+                </div>
+                `;
+            });
+
+            htmlList += '</div>';
+            container.innerHTML = htmlList;
+        }
+    </script>
+</body>
+</html>
